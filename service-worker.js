@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'vocab-trainer-v12.8';
+const CACHE_NAME = 'vocab-trainer-v12.8.1';
 const APP_SHELL = [
   './index.html',
   './manifest.webmanifest',

@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#E75480">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Vokabeltrainer — v12.8 (PWA)</title>
+<title>Vokabeltrainer — v12.8.1 (PWA)</title>
 <style>
 :root { --bg:#FFEAF2; --card:#FFF6FA; --ink:#1F1F1F; --muted:#6b6b6b; --accent:#E75480; --good:#2E8B57; --bad:#C0392B; --border:#F4C6D8; }
 *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
@@ -58,12 +58,15 @@ th,td{border-bottom:1px solid var(--border);padding:8px;text-align:left}
 td input, td select{width:100%;border:1px solid var(--border);border-radius:8px;padding:6px 8px;background:white}
 td .iconbtn{background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 8px;cursor:pointer}
 @media(max-width:480px){.controls .big button{font-size:15px;padding:14px 16px} .word{font-size:28px} .answer{font-size:26px} .btn{padding:10px 12px} .opt{font-size:17px;padding:12px 14px}}
+
+/* focus trap hint */
+.modal:focus { outline: none; }
 </style>
 </head>
 <body>
 <div class="container">
   <header>
-    <h1>Vokabeltrainer — v12.8</h1>
+    <h1>Vokabeltrainer — v12.8.1</h1>
     <div class="topbar">
       <div class="left">
         <button id="homeBtn" class="btn ghost">🏠 Startseite</button>
@@ -155,7 +158,7 @@ td .iconbtn{background:transparent;border:1px solid var(--border);border-radius:
 <div class="helpbar small">Kurzbefehle: ← Zurück • →/Eingabe/Leertaste Aufdecken→Weiter • 1–4 Auswahl in Multiple Choice. Leertaste beim Tippen wird ignoriert.</div>
 
 <!-- View/Edit modal -->
-<div id="editModal" class="modal">
+<div id="editModal" class="modal" tabindex="-1" aria-modal="true" role="dialog">
   <div class="sheet">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <h3>Liste anzeigen/bearbeiten</h3>
@@ -207,10 +210,6 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   let SEEN = JSON.parse(localStorage.getItem(K.seen)||'null') || { map:{}, lastDay:null };
   const GAPS = {1:3, 2:8, 3:20, 4:50};
 
-  // Precompute answer maps for fast lookup
-  const ANS_DE = new Map(); const ANS_ES = new Map();
-  for(const r of DB.items){ ANS_DE.set((r.German||'').toLowerCase(), r); ANS_ES.set((r.Spanish||'').toLowerCase(), r); }
-
   const modeSel=$('#modeSel'), dirSel=$('#dirSel'), startBtn=$('#startBtn'), homeBtn=$('#homeBtn'), editBtn=$('#editBtn');
   const verbsOnly=$('#verbsOnly'), starOnly=$('#starOnly'), catWrap=$('#catWrap');
   const uploadBtn=$('#uploadBtn'), exportBtn=$('#exportBtn'), fileInput=$('#fileInput');
@@ -228,6 +227,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   let POOL=[], CURRENT=null, ANSWERED=false;
   let MC_OPTS=[], MC_SELECTED=-1, MC_CORRECT='';
   let HIST=[], FUT=[];
+  let EDIT_OPEN=false;
 
   function persist(){
     localStorage.setItem(K.db, JSON.stringify(DB));
@@ -269,6 +269,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   function seenToday(k){ const d=todayDay(); return (SEEN.map[k]||-1)===d; }
   function markSeen(k){ const d=todayDay(); SEEN.map[k]=d; SEEN.lastDay=d; persist(); }
 
+  const G = {1:3, 2:8, 3:20, 4:50};
   function due(r){ const k=keyOf(r); const m=SRS.per[k]||{box:1,nextDue:0}; return (m.nextDue||0) <= (SRS.step||0); }
 
   function pickNew(advanceStep){
@@ -298,7 +299,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   function goNext(){
     if(!POOL.length){ return; }
     if(MODE==='flash' && ANSWERED){
-      const k=keyOf(CURRENT); const m=SRS.per[k]||{box:1,nextDue:0}; m.box=Math.min(4,(m.box||1)+1); m.nextDue=(SRS.step||0)+(GAPS[m.box]||3); SRS.per[k]=m;
+      const k=keyOf(CURRENT); const m=SRS.per[k]||{box:1,nextDue:0}; m.box=Math.min(4,(m.box||1)+1); m.nextDue=(SRS.step||0)+(G[aOf(m.box)]||3); SRS.per[k]=m;
       ratedMsg.textContent='bewertet: Gut (Standard)';
     }
     if(FUT.length){
@@ -374,7 +375,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
       feedback.className = 'feedback ' + (ok?'good':'bad');
       answer.style.display='block'; ANSWERED=true; primaryBtn.textContent='Weiter';
       STATS.total += 1; if(ok) STATS.correct += 1;
-      const k=keyOf(CURRENT); const m=SRS.per[k]||{box:1,nextDue:0}; m.box = ok? Math.min(4,(m.box||1)+1) : 1; m.nextDue=(SRS.step||0)+(GAPS[m.box]||3); SRS.per[k]=m;
+      const k=keyOf(CURRENT); const m=SRS.per[k]||{box:1,nextDue:0}; m.box = ok? Math.min(4,(m.box||1)+1) : 1; m.nextDue=(SRS.step||0)+(G[m.box]||3); SRS.per[k]=m;
       persist(); updateProgress(); return;
     }
     if(MODE==='type'){
@@ -383,7 +384,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
       feedback.className='feedback ' + (ok?'good':'bad');
       answer.style.display='block'; ANSWERED=true; primaryBtn.textContent='Weiter';
       STATS.total += 1; if(ok) STATS.correct += 1;
-      const k=keyOf(CURRENT); const m=SRS.per[k]||{box:1,nextDue:0}; m.box = ok? Math.min(4,(m.box||1)+1) : 1; m.nextDue=(SRS.step||0)+(GAPS[m.box]||3); SRS.per[k]=m;
+      const k=keyOf(CURRENT); const m=SRS.per[k]||{box:1,nextDue:0}; m.box = ok? Math.min(4,(m.box||1)+1) : 1; m.nextDue=(SRS.step||0)+(G[m.box]||3); SRS.per[k]=m;
       persist(); updateProgress(); return;
     }
   }
@@ -442,10 +443,22 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
     reader.readAsText(f,'utf-8');
   });
 
-  // Keyboard
+  // === Keyboard handling fixes ===
+  function isEditableElement(el){
+    return !!el && (
+      el.tagName==='INPUT' ||
+      el.tagName==='TEXTAREA' ||
+      el.tagName==='SELECT' ||
+      el.isContentEditable ||
+      el.closest('#editModal') // anything inside modal is "editing context"
+    );
+  }
+
+  // Global keyboard (suspended if editing)
   window.addEventListener('keydown', (e)=>{
+    const target = e.target;
+    if(EDIT_OPEN || isEditableElement(target)) return; // Do nothing while editing
     if(practice.style.display==='none') return;
-    if(document.activeElement===answerInput && e.key===' ') return;
     if(e.key==='ArrowLeft'){ e.preventDefault(); prev(); return; }
     if(['ArrowRight','Enter',' '].includes(e.key)){ e.preventDefault(); if(!ANSWERED) checkOrReveal(); else goNext(); return; }
     if(MODE==='mc' && ['1','2','3','4'].includes(e.key)){
@@ -453,10 +466,16 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
     }
   });
 
-  // Swipe gestures
+  // Stop propagation inside modal controls so Space/Enter/Arrows work naturally
+  function swallowKeysInside(node){
+    node.addEventListener('keydown', (e)=>{ e.stopPropagation(); }, true);
+  }
+
+  // Swipe gestures (still active in practice only)
   let touchX=null, touchY=null;
-  document.addEventListener('touchstart', (e)=>{ const t=e.changedTouches[0]; touchX=t.clientX; touchY=t.clientY; }, {passive:true});
+  document.addEventListener('touchstart', (e)=>{ if(EDIT_OPEN) return; const t=e.changedTouches[0]; touchX=t.clientX; touchY=t.clientY; }, {passive:true});
   document.addEventListener('touchend', (e)=>{
+    if(EDIT_OPEN) return;
     const t=e.changedTouches[0]; if(touchX===null) return;
     const dx=t.clientX-touchX; const dy=t.clientY-touchY;
     if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)){
@@ -465,19 +484,29 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
     touchX=null; touchY=null;
   }, {passive:true});
 
-  // View/Edit modal — virtualised rendering (chunks) for large lists
+  // View/Edit modal with focus trap and key isolation
   function openEdit(){
+    EDIT_OPEN=true;
     searchInput.value='';
     catFilter.innerHTML = '<option value="">Alle</option>' + [...new Set(DB.categories)].sort().map(c=>`<option>${c}</option>`).join('');
-    editModal.style.display='flex';
     renderEditTable();
+    editModal.style.display='flex';
+    // focus trap start
+    editModal.setAttribute('aria-hidden','false');
+    editModal.focus();
+    swallowKeysInside(editModal);
   }
-  function closeEditFn(){ editModal.style.display='none'; }
+  function closeEditFn(){
+    EDIT_OPEN=false;
+    editModal.style.display='none';
+    editModal.setAttribute('aria-hidden','true');
+  }
+
   function renderEditTable(){
     const q = (searchInput.value||'').toLowerCase().trim();
     const cat = catFilter.value||'';
     const rows = DB.items.filter(r => (!cat || r.Book===cat) && ( !q || (r.German||'').toLowerCase().includes(q) || (r.Spanish||'').toLowerCase().includes(q) ));
-    const CHUNK = 200;
+    const CHUNK = 250;
     editTable.innerHTML='';
     let i=0;
     function appendChunk(){
@@ -488,6 +517,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
         const tdStar=document.createElement('td'); const sbtn=document.createElement('button'); sbtn.className='iconbtn'; sbtn.textContent = STARS.has(keyOf(r)) ? '★' : '☆';
         sbtn.onclick=()=>{ const k=keyOf(r); if(STARS.has(k)) STARS.delete(k); else STARS.add(k); sbtn.textContent = STARS.has(k)?'★':'☆'; persist(); };
         tdStar.appendChild(sbtn); tr.appendChild(tdStar);
+
         const tdBook=document.createElement('td'); const sel=document.createElement('select'); const cats=[...new Set(DB.categories)].sort();
         cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; if(c===r.Book) o.selected=true; sel.appendChild(o); });
         const customOpt=document.createElement('option'); customOpt.value='__custom__'; customOpt.textContent='— eigene Kategorie —'; sel.appendChild(customOpt);
@@ -499,14 +529,21 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
           }
           persist(); renderEditTable();
         };
-        const tdDe=document.createElement('td'); const inDe=document.createElement('input'); inDe.value=r.German||''; inDe.onchange=()=>{ r.German=inDe.value.trim(); persist(); };
-        const tdEs=document.createElement('td'); const inEs=document.createElement('input'); inEs.value=r.Spanish||''; inEs.onchange=()=>{ r.Spanish=inEs.value.trim(); persist(); };
+
+        const tdDe=document.createElement('td'); const inDe=document.createElement('input'); inDe.value=r.German||'';
+        inDe.onkeydown=(e)=>e.stopPropagation(); inDe.onchange=()=>{ r.German=inDe.value.trim(); persist(); };
+
+        const tdEs=document.createElement('td'); const inEs=document.createElement('input'); inEs.value=r.Spanish||'';
+        inEs.onkeydown=(e)=>e.stopPropagation(); inEs.onchange=()=>{ r.Spanish=inEs.value.trim(); persist(); };
+
         tdBook.appendChild(sel); tr.appendChild(tdBook);
         tdDe.appendChild(inDe); tr.appendChild(tdDe);
         tdEs.appendChild(inEs); tr.appendChild(tdEs);
+
         const tdDel=document.createElement('td'); const del=document.createElement('button'); del.className='iconbtn'; del.textContent='🗑 Löschen';
         del.onclick=()=>{ if(confirm('Möchten Sie dieses Element dauerhaft löschen?')){ const k=keyOf(r); DB.items = DB.items.filter(x=> x!==r); STARS.delete(k); delete SRS.per[k]; delete SEEN.map[k]; persist(); renderEditTable(); renderCatChips(); } };
         tdDel.appendChild(del); tr.appendChild(tdDel);
+
         frag.appendChild(tr);
       }
       editTable.appendChild(frag);
@@ -514,10 +551,13 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
     }
     requestAnimationFrame(appendChunk);
   }
-  function debounce(fn, ms){ let t=null; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(None,args), ms); }; }
-  const debouncedRender = debounce(renderEditTable, 150);
+
+  // Debounced search
+  function debounce(fn, ms){ let t=null; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(null,args), ms); }; }
+  const debouncedRender = debounce(renderEditTable, 120);
   searchInput?.addEventListener('input', debouncedRender);
   catFilter?.addEventListener('change', renderEditTable);
+
   addItemBtn?.addEventListener('click', ()=>{
     const b=(newBook.value||'').trim(), de=(newDe.value||'').trim(), es=(newEs.value||'').trim();
     if(!de || !es){ alert('Bitte geben Sie Deutsch und Spanisch ein.'); return; }
@@ -525,9 +565,12 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
     DB.items.push(rec); if(!DB.categories.includes(rec.Book)) DB.categories.push(rec.Book);
     newDe.value=''; newEs.value=''; persist(); renderEditTable(); renderCatChips();
   });
+
   closeEdit?.addEventListener('click', closeEditFn);
   editBtn?.addEventListener('click', openEdit);
   editModal.addEventListener('click', (e)=>{ if(e.target===editModal) closeEditFn(); });
+  // Prevent scroll issue on space inside modal background
+  editModal.addEventListener('keydown', (e)=>{ e.stopPropagation(); }, true);
 
   modeSel.value=STATE.mode; dirSel.value=STATE.dir;
   if(!localStorage.getItem('vt_controls_seen_once')){ document.getElementById('controlsDetails').open = true; localStorage.setItem('vt_controls_seen_once','1'); }

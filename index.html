@@ -1,20 +1,20 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#E75480">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>vocab trainer — v12.6.4 (PWA)</title>
+<title>Vokabeltrainer — v12.7 (PWA)</title>
 <style>
 :root { --bg:#FFEAF2; --card:#FFF6FA; --ink:#1F1F1F; --muted:#6b6b6b; --accent:#E75480; --good:#2E8B57; --bad:#C0392B; --border:#F4C6D8; }
 *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
 .container{max-width:1150px;margin:0 auto;padding:16px}
 header{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
 h1{margin:0;font-size:18px}
-.btn{background:var(--accent);color:#fff;border:none;border-radius:14px;padding:10px 14px;font-weight:700;cursor:pointer}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:14px;padding:10px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--border)}
 .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px}
 .helpbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--border);padding:8px 12px;color:var(--muted);font-size:13px;z-index:5}
@@ -68,64 +68,73 @@ table{width:100%;border-collapse:collapse}
 th,td{border-bottom:1px solid var(--border);padding:8px;text-align:left}
 td input, td select{width:100%;border:1px solid var(--border);border-radius:8px;padding:6px 8px;background:white}
 td .iconbtn{background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 8px;cursor:pointer}
+
+/* Mobile sizing to avoid wrap */
+@media(max-width:480px){
+  .controls .big button{font-size:14px;padding:12px 14px}
+  .word{font-size:28px}
+  .answer{font-size:26px}
+  .btn{padding:9px 12px}
+}
 </style>
 </head>
 <body>
 <div class="container">
   <header>
-    <h1>vocab trainer — v12.6.4</h1>
+    <h1>Vokabeltrainer — v12.7</h1>
     <div class="topbar">
       <div class="left">
-        <button id="homeBtn" class="btn ghost">🏠 home</button>
-        <button id="editBtn" class="btn ghost">✏ view/edit</button>
+        <button id="homeBtn" class="btn ghost">🏠 Startseite</button>
+        <button id="editBtn" class="btn ghost">✏ Liste anzeigen/bearbeiten</button>
       </div>
       <div class="right">
         <div id="installBanner">
-          <span class="small">install?</span>
-          <button id="installBtn" class="btn">Install app</button>
+          <span class="small">Installieren?</span>
+          <button id="installBtn" class="btn">App installieren</button>
         </div>
         <input id="fileInput" type="file" accept=".csv" style="display:none">
-        <button id="uploadBtn" class="btn ghost">⤴ upload csv</button>
-        <button id="exportBtn" class="btn ghost">⤵ export starred</button>
+        <button id="uploadBtn" class="btn ghost">⤴ CSV hochladen</button>
+        <button id="exportBtn" class="btn ghost">⤵ Favoriten exportieren</button>
       </div>
     </div>
   </header>
 
   <section id="intro" class="panel">
-    <p><strong>start practice</strong></p>
+    <p><strong>Willkommen zum Vokabeltrainer. Bitte wählen Sie Ihre Einstellungen.</strong></p>
+    <p><strong>Training starten</strong></p>
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
-      <div><label class="small">mode</label><br>
+      <div><label class="small">Modus</label><br>
         <select id="modeSel">
-          <option value="flash">flashcards</option>
-          <option value="mc">multiple choice (4)</option>
-          <option value="type">type the answer</option>
+          <option value="flash">Karteikarten</option>
+          <option value="mc">Multiple Choice (4)</option>
+          <option value="type">Antwort eingeben</option>
         </select>
       </div>
-      <div><label class="small">direction</label><br>
+      <div><label class="small">Richtung</label><br>
         <select id="dirSel">
-          <option value="de2es">german → spanish</option>
-          <option value="es2de">spanish → german</option>
+          <option value="de2es">Deutsch → Spanisch</option>
+          <option value="es2de">Spanisch → Deutsch</option>
         </select>
       </div>
-      <button id="startBtn" class="btn">Start</button>
+      <button id="startBtn" class="btn">Starten</button>
     </div>
 
     <div class="filters">
-      <label class="small"><input id="verbsOnly" type="checkbox"> verbs only</label>
-      <label class="small"><input id="starOnly" type="checkbox"> starred only</label>
+      <label class="small"><input id="verbsOnly" type="checkbox"> nur Verben</label>
+      <label class="small"><input id="starOnly" type="checkbox"> nur Favoriten</label>
     </div>
 
     <div style="margin-top:8px">
-      <label class="small">categories</label>
+      <label class="small">Kategorien</label>
       <div id="catWrap"></div>
     </div>
 
     <details id="controlsDetails" style="margin-top:12px">
-      <summary>controls & help</summary>
+      <summary>Steuerung & Hilfe</summary>
       <div class="panel" style="margin-top:8px">
-        <p><strong>Desktop:</strong> ← back • → / Enter / Space reveal→next • 1–4 choose in MC.</p>
-        <p><strong>Touch:</strong> swipe right = back • swipe left = reveal→next • tap buttons.</p>
-        <p class="small">Progress & stars persist on this device. “Seen today” skips words you’ve already seen in the last 24 hours with the same filters.</p>
+        <p><strong>Desktop:</strong> ← Zurück • → / Eingabe / Leertaste: Aufdecken → Weiter • 1–4 Auswahl in Multiple Choice.</p>
+        <p><strong>Touch:</strong> Wischen Sie nach rechts = Zurück • nach links = Aufdecken → Weiter • tippen Sie auf die Schaltflächen.</p>
+        <p class="small">Fortschritt & Favoriten bleiben auf diesem Gerät gespeichert. „Heute gesehen“ überspringt Wörter, die Sie in den letzten 24 Stunden mit denselben Filtern bereits gesehen haben.</p>
       </div>
     </details>
   </section>
@@ -133,59 +142,59 @@ td .iconbtn{background:transparent;border:1px solid var(--border);border-radius:
   <section id="practice" class="panel card" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div class="small" id="pill">—</div>
-      <div id="starBtn" class="star" title="toggle favourite">☆</div>
+      <div id="starBtn" class="star" title="Favorit umschalten">☆</div>
     </div>
     <div class="word" id="question">—</div>
     <div id="options" class="options" style="display:none"></div>
     <div class="inputrow" id="typeRow">
-      <input id="answerInput" type="text" placeholder="type your answer">
-      <button id="checkBtn" class="btn">check</button>
+      <input id="answerInput" type="text" placeholder="Antwort eingeben">
+      <button id="checkBtn" class="btn">Prüfen</button>
     </div>
     <div class="answer" id="answer" style="display:none"></div>
     <div class="feedback" id="feedback"></div>
 
     <div class="rate" id="rateRow">
-      <button class="btn again" data-rate="again">Again</button>
-      <button class="btn hard" data-rate="hard">Hard</button>
-      <button class="btn good" data-rate="good">Good</button>
-      <button class="btn easy" data-rate="easy">Easy</button>
+      <button class="btn again" data-rate="again">Erneut</button>
+      <button class="btn hard" data-rate="hard">Schwierig</button>
+      <button class="btn good" data-rate="good">Gut</button>
+      <button class="btn easy" data-rate="easy">Einfach</button>
       <span class="small" id="ratedMsg"></span>
     </div>
 
     <div class="controls">
-      <div class="big"><button id="backBtn" class="btn ghost">◀ back</button></div>
-      <div class="big"><button id="primaryBtn" class="btn">reveal</button></div>
-      <div class="big"><button id="nextBtn" class="btn ghost">next ▶</button></div>
+      <div class="big"><button id="backBtn" class="btn ghost">◀ Zurück</button></div>
+      <div class="big"><button id="primaryBtn" class="btn">Aufdecken</button></div>
+      <div class="big"><button id="nextBtn" class="btn ghost">Weiter ▶</button></div>
     </div>
-    <div class="small progress" id="progress">0 / 0 • 0% correct</div>
+    <div class="small progress" id="progress">0 / 0 • 0% korrekt</div>
   </section>
 </div>
 
-<div class="helpbar small">Shortcuts: ← back • →/Enter/Space reveal→next • 1–4 pick in MC. Space is ignored while typing.</div>
+<div class="helpbar small">Kurzbefehle: ← Zurück • →/Eingabe/Leertaste Aufdecken→Weiter • 1–4 Auswahl in Multiple Choice. Leertaste beim Tippen wird ignoriert.</div>
 
 <!-- View/Edit modal -->
 <div id="editModal" class="modal">
   <div class="sheet">
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <h3>view / edit list</h3>
-      <button id="closeEdit" class="btn ghost">✕ close</button>
+      <h3>Liste anzeigen/bearbeiten</h3>
+      <button id="closeEdit" class="btn ghost">✕ Schließen</button>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px">
-      <div><label class="small">search</label><br><input id="searchInput" placeholder="search text"></div>
-      <div><label class="small">category filter</label><br><select id="catFilter"><option value="">All</option></select></div>
+      <div><label class="small">Suche</label><br><input id="searchInput" placeholder="Suchtext"></div>
+      <div><label class="small">Kategoriefilter</label><br><select id="catFilter"><option value="">Alle</option></select></div>
     </div>
     <table id="editTable">
-      <thead><tr><th>★</th><th>category</th><th>german</th><th>spanish</th><th></th></tr></thead>
+      <thead><tr><th>★</th><th>Kategorie</th><th>Deutsch</th><th>Spanisch</th><th></th></tr></thead>
       <tbody></tbody>
     </table>
     <div style="margin-top:8px">
       <details>
-        <summary>add new item</summary>
+        <summary>Neues Element hinzufügen</summary>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
-          <input id="newBook" placeholder="category">
-          <input id="newDe" placeholder="german">
-          <input id="newEs" placeholder="spanish">
-          <button id="addItemBtn" class="btn">add</button>
+          <input id="newBook" placeholder="Kategorie">
+          <input id="newDe" placeholder="Deutsch">
+          <input id="newEs" placeholder="Spanisch">
+          <button id="addItemBtn" class="btn">Hinzufügen</button>
         </div>
       </details>
     </div>
@@ -266,7 +275,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   function qOf(r){ return DIR==='de2es' ? r.German : r.Spanish; }
   function aOf(r){ return DIR==='de2es' ? r.Spanish : r.German; }
 
-  function updatePill(){ pill.textContent = MODE + ' • ' + (DIR==='de2es'?'DE→ES':'ES→DE') + ' • cats: ' + (STATE.cats||[]).join(', '); }
+  function updatePill(){ pill.textContent = (MODE==='flash'?'Karteikarten':(MODE==='mc'?'Multiple Choice':'Antwort eingeben')) + ' • ' + (DIR==='de2es'?'DE→ES':'ES→DE') + ' • Kategorien: ' + (STATE.cats||[]).join(', '); }
 
   function todayDay(){ return Math.floor(Date.now()/86400000); }
   function seenToday(k){ const d=todayDay(); return (SEEN.map[k]||-1)===d; }
@@ -302,7 +311,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
     if(!POOL.length){ return; }
     if(MODE==='flash' && ANSWERED){
       const k=keyOf(CURRENT); const m=SRS.per[k]||{box:1,nextDue:0}; m.box=Math.min(4,(m.box||1)+1); m.nextDue=(SRS.step||0)+(GAPS[m.box]||3); SRS.per[k]=m;
-      ratedMsg.textContent='rated: Good (default)';
+      ratedMsg.textContent='bewertet: Gut (Standard)';
     }
     if(FUT.length){
       const nextKey = FUT.pop();
@@ -326,9 +335,9 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   }
 
   function renderCard(){
-    if(!CURRENT){ question.textContent='No items in current filter.'; answer.style.display='none'; options.style.display='none'; typeRow.style.display='none'; feedback.textContent=''; ratedMsg.textContent=''; updateProgress(); return; }
-    question.textContent = qOf(CURRENT) || '[missing]';
-    answer.textContent = aOf(CURRENT) || '[missing]';
+    if(!CURRENT){ question.textContent='Keine Elemente im aktuellen Filter.'; answer.style.display='none'; options.style.display='none'; typeRow.style.display='none'; feedback.textContent=''; ratedMsg.textContent=''; updateProgress(); return; }
+    question.textContent = qOf(CURRENT) || '[fehlt]';
+    answer.textContent = aOf(CURRENT) || '[fehlt]';
     answer.style.display='none'; feedback.textContent=''; ratedMsg.textContent='';
     rateRow.style.display = (MODE==='flash') ? 'flex' : 'none';
     options.style.display = (MODE==='mc') ? 'grid' : 'none';
@@ -348,7 +357,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
       opts.forEach((t,idx)=>{ const b=document.createElement('button'); b.className='opt'; b.type='button'; b.textContent=t; b.onclick=()=>selectMC(idx,t,correct); options.appendChild(b); });
       MC_OPTS = opts; MC_SELECTED=-1; highlightMC();
     }
-    primaryBtn.textContent = (MODE==='flash') ? 'reveal' : 'check';
+    primaryBtn.textContent = (MODE==='flash') ? 'Aufdecken' : 'Prüfen';
     updateProgress();
   }
 
@@ -357,24 +366,25 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
 
   function checkOrReveal(){
     if(!CURRENT) return;
-    if(MODE==='flash'){ answer.style.display='block'; ANSWERED=true; primaryBtn.textContent='next'; return; }
+    if(MODE==='flash'){ answer.style.display='block'; ANSWERED=true; primaryBtn.textContent='Weiter'; return; }
     if(MODE==='mc'){
       if(MC_SELECTED<0) return;
       const btns=[...options.children];
       btns.forEach(b=>b.classList.remove('correct','incorrect'));
       btns.forEach(b=>{ if(b.textContent===MC_CORRECT) b.classList.add('correct'); });
       const ok = (MC_OPTS[MC_SELECTED]===MC_CORRECT);
-      feedback.textContent = ok? 'Correct!' : 'Try again';
+      feedback.textContent = ok? 'Richtig!' : 'Leider falsch. Versuchen Sie es erneut.';
       feedback.className = 'feedback ' + (ok?'good':'bad');
-      answer.style.display='block'; ANSWERED=true; primaryBtn.textContent='next';
+      answer.style.display='block'; ANSWERED=true; primaryBtn.textContent='Weiter';
       STATS.total += 1; if(ok) STATS.correct += 1;
       const k=keyOf(CURRENT); const m=SRS.per[k]||{box:1,nextDue:0}; m.box = ok? Math.min(4,(m.box||1)+1) : 1; m.nextDue=(SRS.step||0)+(GAPS[m.box]||3); SRS.per[k]=m;
       persist(); updateProgress(); return;
     }
     if(MODE==='type'){
       const user=(answerInput.value||'').trim(); const correct=aOf(CURRENT); const ok=(user===correct);
-      feedback.textContent = ok? 'Correct!' : 'Try again'; feedback.className='feedback ' + (ok?'good':'bad');
-      answer.style.display='block'; ANSWERED=true; primaryBtn.textContent='next';
+      feedback.textContent = ok? 'Richtig!' : 'Leider falsch. Versuchen Sie es erneut.';
+      feedback.className='feedback ' + (ok?'good':'bad');
+      answer.style.display='block'; ANSWERED=true; primaryBtn.textContent='Weiter';
       STATS.total += 1; if(ok) STATS.correct += 1;
       const k=keyOf(CURRENT); const m=SRS.per[k]||{box:1,nextDue:0}; m.box = ok? Math.min(4,(m.box||1)+1) : 1; m.nextDue=(SRS.step||0)+(GAPS[m.box]||3); SRS.per[k]=m;
       persist(); updateProgress(); return;
@@ -385,9 +395,10 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
     const total = (POOL&&POOL.length)||0;
     const pos = CURRENT ? (HIST.length + 1) : 0;
     const pct = STATS.total ? Math.round((STATS.correct/STATS.total)*100) : 0;
-    progress.textContent = `${pos} / ${total} • ${pct}% correct`; 
+    progress.textContent = `${pos} / ${total} • ${pct}% korrekt`;
   }
 
+  // Buttons
   startBtn.addEventListener('click', ()=> start());
   homeBtn.addEventListener('click', ()=> showIntro());
   backBtn.addEventListener('click', ()=> prev());
@@ -396,6 +407,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   checkBtn.addEventListener('click', ()=> checkOrReveal());
   starBtn.addEventListener('click', ()=>{ if(!CURRENT) return; const k=keyOf(CURRENT); if(STARS.has(k)) STARS.delete(k); else STARS.add(k); starBtn.textContent = STARS.has(k)? '★':'☆'; persist(); });
 
+  // Filters on home
   verbsOnly.checked = !!STATE.verbsOnly;
   starOnly.checked = !!STATE.starOnly;
   verbsOnly.addEventListener('change', (e)=>{ STATE.verbsOnly=!!e.target.checked; persist(); });
@@ -405,11 +417,12 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   function initCatChips(){ renderCatChips(); [...catWrap.querySelectorAll('.chip')].forEach(b=> b.addEventListener('click', toggleChip)); }
   initCatChips();
 
+  // Export/Upload
   exportBtn.addEventListener('click', ()=>{
     const rows=[...STARS].map(k=>{ const [de,es]=k.split('||'); return `"${(de||'').replace(/"/g,'""')}","${(es||'').replace(/"/g,'""')}"`; });
     const csv='German,Spanish\n'+rows.join('\n');
     const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); const d=new Date().toISOString().slice(0,10);
-    a.href=URL.createObjectURL(blob); a.download='starred_'+d+'.csv'; a.click(); URL.revokeObjectURL(a.href);
+    a.href=URL.createObjectURL(blob); a.download='favoriten_'+d+'.csv'; a.click(); URL.revokeObjectURL(a.href);
   });
   uploadBtn.addEventListener('click', ()=> fileInput.click());
   fileInput.addEventListener('change', (e)=>{
@@ -421,8 +434,8 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
       const ib = header.findIndex(h=>/book/i.test(h));
       const id = header.findIndex(h=>/german|deutsch/i.test(h));
       const ie = header.findIndex(h=>/spanish|español|espanol/i.test(h));
-      if(ib<0 || id<0 || ie<0){ alert('CSV must have Book,German,Spanish'); return; }
-      let newCatName = 'Imported '+new Date().toISOString().slice(0,10);
+      if(ib<0 || id<0 || ie<0){ alert('CSV muss die Spalten Book,German,Spanish enthalten.'); return; }
+      let newCatName = 'Importiert '+new Date().toISOString().slice(0,10);
       for(const line of lines){
         const cols=line.split(',');
         const rec={ Book:(cols[ib]||newCatName).trim(), German:(cols[id]||'').trim(), Spanish:(cols[ie]||'').trim() };
@@ -430,11 +443,12 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
       }
       localStorage.setItem(K.db, JSON.stringify(DB));
       renderCatChips(); initCatChips();
-      alert('CSV loaded. New items available.');
+      alert('CSV geladen. Neue Einträge verfügbar.');
     };
     reader.readAsText(f,'utf-8');
   });
 
+  // Keyboard
   window.addEventListener('keydown', (e)=>{
     if(practice.style.display==='none') return;
     if(document.activeElement===answerInput && e.key===' ') return;
@@ -460,7 +474,7 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   // View/Edit modal
   function openEdit(){
     searchInput.value='';
-    catFilter.innerHTML = '<option value="">All</option>' + [...new Set(DB.categories)].sort().map(c=>`<option>${c}</option>`).join('');
+    catFilter.innerHTML = '<option value="">Alle</option>' + [...new Set(DB.categories)].sort().map(c=>`<option>${c}</option>`).join('');
     renderEditTable();
     editModal.style.display='flex';
   }
@@ -477,10 +491,10 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
       tdStar.appendChild(sbtn); tr.appendChild(tdStar);
       const tdBook=document.createElement('td'); const sel=document.createElement('select'); const cats=[...new Set(DB.categories)].sort();
       cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; if(c===r.Book) o.selected=true; sel.appendChild(o); });
-      const customOpt=document.createElement('option'); customOpt.value='__custom__'; customOpt.textContent='— custom —'; sel.appendChild(customOpt);
+      const customOpt=document.createElement('option'); customOpt.value='__custom__'; customOpt.textContent='— eigene Kategorie —'; sel.appendChild(customOpt);
       sel.onchange=()=>{
         if(sel.value==='__custom__'){
-          const nv=prompt('New category (name):', r.Book||''); if(nv && nv.trim()){ r.Book=nv.trim(); if(!DB.categories.includes(r.Book)) DB.categories.push(r.Book); renderCatChips(); }
+          const nv=prompt('Neue Kategorie (Name):', r.Book||''); if(nv && nv.trim()){ r.Book=nv.trim(); if(!DB.categories.includes(r.Book)) DB.categories.push(r.Book); renderCatChips(); }
         }else{
           r.Book=sel.value;
         }
@@ -491,8 +505,8 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
       tdBook.appendChild(sel); tr.appendChild(tdBook);
       tdDe.appendChild(inDe); tr.appendChild(tdDe);
       tdEs.appendChild(inEs); tr.appendChild(tdEs);
-      const tdDel=document.createElement('td'); const del=document.createElement('button'); del.className='iconbtn'; del.textContent='🗑 delete';
-      del.onclick=()=>{ if(confirm('Delete this item permanently?')){ const k=keyOf(r); DB.items = DB.items.filter(x=> x!==r); STARS.delete(k); delete SRS.per[k]; delete SEEN.map[k]; persist(); renderEditTable(); renderCatChips(); } };
+      const tdDel=document.createElement('td'); const del=document.createElement('button'); del.className='iconbtn'; del.textContent='🗑 Löschen';
+      del.onclick=()=>{ if(confirm('Möchten Sie dieses Element dauerhaft löschen?')){ const k=keyOf(r); DB.items = DB.items.filter(x=> x!==r); STARS.delete(k); delete SRS.per[k]; delete SEEN.map[k]; persist(); renderEditTable(); renderCatChips(); } };
       tdDel.appendChild(del); tr.appendChild(tdDel);
       editTable.appendChild(tr);
     }
@@ -501,8 +515,8 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', ()=> navigat
   catFilter?.addEventListener('change', renderEditTable);
   addItemBtn?.addEventListener('click', ()=>{
     const b=(newBook.value||'').trim(), de=(newDe.value||'').trim(), es=(newEs.value||'').trim();
-    if(!de || !es){ alert('Please enter both German and Spanish.'); return; }
-    const rec={ Book:b||'Custom', German:de, Spanish:es };
+    if(!de || !es){ alert('Bitte geben Sie Deutsch und Spanisch ein.'); return; }
+    const rec={ Book:b||'Eigene Kategorie', German:de, Spanish:es };
     DB.items.push(rec); if(!DB.categories.includes(rec.Book)) DB.categories.push(rec.Book);
     newDe.value=''; newEs.value=''; persist(); renderEditTable(); renderCatChips();
   });

@@ -1,6 +1,6 @@
 {
-  "name": "vocab trainer",
-  "short_name": "vocab",
+  "name": "Vokabeltrainer",
+  "short_name": "Vokabeln",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

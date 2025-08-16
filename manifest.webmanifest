@@ -1,7 +1,7 @@
 {
   "name": "Vokabeltrainer",
   "short_name": "Vokabeln",
-  "start_url": "./index.html",
+  "start_url": "./index.html?v=12.8.3",
   "scope": "./",
   "display": "standalone",
   "background_color": "#FFEAF2",

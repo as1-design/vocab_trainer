@@ -1,7 +1,7 @@
 
-const CACHE_NAME = 'vocab-trainer-v12.8.2';
+const CACHE_NAME = 'vocab-trainer-v12.8.3';
 const APP_SHELL = [
-  './index.html',
+  './index.html?v=12.8.3',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png'
@@ -32,7 +32,7 @@ self.addEventListener('fetch', (event) => {
       return net;
     } catch (err) {
       if (req.mode === 'navigate') {
-        const fallback = await cache.match('./index.html');
+        const fallback = await cache.match('./index.html?v=12.8.3');
         if (fallback) return fallback;
       }
       throw err;

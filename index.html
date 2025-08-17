@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#E75480">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Vokabeltrainer — v12.9.3</title>
+<title>Vokabeltrainer — v12.9.4</title>
 <style>
 :root{--bg:#FFEAF2;--card:#FFF6FA;--ink:#1F1F1F;--muted:#6b6b6b;--accent:#E75480;--good:#2E8B57;--bad:#C0392B;--border:#F4C6D8}
 *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
@@ -42,7 +42,7 @@ label.switch{display:inline-flex;align-items:center;gap:6px}
 </head>
 <body>
 <div class="container">
-<header><h1>Vokabeltrainer — v12.9.3</h1>
+<header><h1>Vokabeltrainer — v12.9.4</h1>
  <div class="topbar">
   <div>
    <button id="homeBtn" class="btn ghost" onclick="App.showIntro()" ontouchstart="App.showIntro();return false;">🏠 Startseite</button>
@@ -152,16 +152,16 @@ var App=(function(){
     var hToggle=document.getElementById('hapticsToggle');
     if(hToggle){ hToggle.checked=!!SETTINGS.haptics; hToggle.addEventListener('change', function(){ SETTINGS.haptics=hToggle.checked; localStorage.setItem(settingsKey, JSON.stringify(SETTINGS)); }); }
 
-    // Haptics helper
+    // Stronger Haptics helper (Android-friendly; ≥30ms segments)
     function vibe(kind){
       if(!SETTINGS.haptics) return;
       if(!('vibrate' in navigator)) return;
-      if(kind==='tap'){ navigator.vibrate(15); }
-      else if(kind==='good'){ navigator.vibrate([15, 20, 15]); }
-      else if(kind==='bad'){ navigator.vibrate([60, 40]); }
+      if(kind==='tap'){ navigator.vibrate(30); }                    // single light tap
+      else if(kind==='good'){ navigator.vibrate([40,50,40,50,40]); } // triple short with pauses
+      else if(kind==='bad'){ navigator.vibrate([140,60,140]); }      // two long pulses
     }
 
-    // Show availability in diagnostics once
+    // Show availability
     var hAvail=('vibrate' in navigator);
     log('Initialisierung abgeschlossen. (Haptik: '+(hAvail?'verfügbar':'nicht verfügbar')+')');
 
@@ -189,9 +189,6 @@ var App=(function(){
     var MODE=STATE.mode,DIR=STATE.dir; var POOL=[],CURRENT=null,ANSWERED=false; 
     var MC_OPTS=[],MC_SELECTED=-1,MC_CORRECT_IDX=-1;
     var HIST=[],FUT=[];
-    var ACTION_LOCK_TS=0;
-
-    function lock(){ var now=Date.now(); if(now-ACTION_LOCK_TS<250) return true; ACTION_LOCK_TS=now; return false; }
 
     function persist(){ try{
       localStorage.setItem(K.db,JSON.stringify(DB)); localStorage.setItem(K.stars,JSON.stringify(Array.from(STARS))); localStorage.setItem(K.state,JSON.stringify(STATE));
@@ -207,7 +204,6 @@ var App=(function(){
     function updatePill(){ if(pill) pill.textContent=(MODE==='flash'?'Karteikarten':(MODE==='mc'?'Multiple Choice':'Antwort eingeben'))+' • '+(DIR==='de2es'?'DE→ES':'ES→DE')+' • Kategorien: '+(STATE.cats||[]).join(', '); }
 
     function todayDay(){return Math.floor(Date.now()/86400000);} function seenToday(k){var d=todayDay();return (SEEN.map[k]||-1)===d;} function markSeen(k){var d=todayDay();SEEN.map[k]=d;SEEN.lastDay=d;persist();}
-
     function due(r){var k=keyOf(r);var m=SRS.per[k]||{box:1,nextDue:0};return (m.nextDue||0)<= (SRS.step||0);}
 
     function pickNew(advance){ if(!POOL.length){CURRENT=null;return;} if(advance)SRS.step=(SRS.step||0)+1; var dueList=POOL.filter(due); var cand=dueList.filter(function(r){return !seenToday(keyOf(r));});
@@ -243,8 +239,7 @@ var App=(function(){
     function start(){ MODE=modeSel.value; DIR=dirSel.value; STATE.mode=MODE; STATE.dir=DIR; STATS={total:0,correct:0}; SRS.step=0; persist(); POOL=buildPool(); HIST=[]; FUT=[];
       if(LAST){ var found=POOL.find(function(r){return keyOf(r)===LAST;}); if(found){ CURRENT=found; ANSWERED=false; } else { pickNew(true);} } else { pickNew(true);} updatePill(); renderCard(); showPractice(); }
 
-    function goNext(){ if(!POOL.length)return; if(MODE==='flash' && ANSWERED){ /* box updates already handled via rating */ }
-      if(FUT.length){ var nextKey=FUT.pop(); if(CURRENT)HIST.push(keyOf(CURRENT)); CURRENT=POOL.find(function(r){return keyOf(r)===nextKey;})||CURRENT; ANSWERED=false; } else { if(CURRENT)HIST.push(keyOf(CURRENT)); pickNew(true); }
+    function goNext(){ if(!POOL.length)return; if(FUT.length){ var nextKey=FUT.pop(); if(CURRENT)HIST.push(keyOf(CURRENT)); CURRENT=POOL.find(function(r){return keyOf(r)===nextKey;})||CURRENT; ANSWERED=false; } else { if(CURRENT)HIST.push(keyOf(CURRENT)); pickNew(true); }
       persist(); renderCard(); updateProgress(); }
 
     function prev(){ if(!HIST.length)return; var prevKey=HIST.pop(); if(CURRENT)FUT.push(keyOf(CURRENT)); CURRENT=POOL.find(function(r){return keyOf(r)===prevKey;})||CURRENT; ANSWERED=false; renderCard(); updateProgress(); }
@@ -290,7 +285,7 @@ var App=(function(){
     function addItem(){ var b=(newBook&&newBook.value||'').trim()||'Eigene Kategorie', de=(newDe&&newDe.value||'').trim(), es=(newEs&&newEs.value||'').trim(); if(!de||!es){ alert('Bitte geben Sie Deutsch und Spanisch ein.'); return; }
       var rec={Book:b,German:de,Spanish:es}; DB.items.push(rec); if(DB.categories.indexOf(b)<0) DB.categories.push(b); if(newDe) newDe.value=''; if(newEs) newEs.value=''; persist(); renderEdit(); vibe('tap'); }
 
-    function hardReset(){ if(confirm('Cache, Service Worker und lokale Daten löschen und neu laden?')){ try{ if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(function(regs){ regs.forEach(function(r){r.unregister();}); }); caches.keys().then(function(keys){ keys.forEach(function(k){caches.delete(k)}); }); } localStorage.clear(); }catch(e){} location.href=location.pathname+'?v=12.9.3#reset'; location.reload(); } }
+    function hardReset(){ if(confirm('Cache, Service Worker und lokale Daten löschen und neu laden?')){ try{ if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(function(regs){ regs.forEach(function(r){r.unregister();}); }); caches.keys().then(function(keys){ keys.forEach(function(k){caches.delete(k)}); }); } localStorage.clear(); }catch(e){} location.href=location.pathname+'?v=12.9.4#reset'; location.reload(); } }
 
     // Keyboard shortcuts
     function isEditable(el){ return el && (['INPUT','TEXTAREA','SELECT'].indexOf(el.tagName)>=0 || el.isContentEditable || (el.closest && el.closest('#editModal'))); }
